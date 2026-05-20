@@ -1,0 +1,335 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #ffffff;
+  background: #0a0a0a;
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: #0a0a0a;
+  scroll-behavior: auto;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255, 209, 0, 0.08), transparent 26rem),
+    radial-gradient(circle at 85% 55%, rgba(255, 255, 255, 0.045), transparent 24rem),
+    #0a0a0a;
+}
+
+.works-page {
+  cursor: none;
+}
+
+.scrollbar-hidden {
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.works-marquee-track,
+.testimonial-track {
+  animation: marquee-x 20s linear infinite;
+}
+
+.works-marquee-track {
+  display: flex;
+  width: fit-content;
+}
+
+.works-marquee-track span {
+  flex-shrink: 0;
+  padding-right: 2rem;
+}
+
+.testimonial-track {
+  animation-duration: 30s;
+}
+
+.testimonial-strip:hover .testimonial-track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-x {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+#cursor-dot,
+#cursor-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 9999;
+  pointer-events: none;
+  border-radius: 999px;
+  will-change: transform;
+}
+
+#cursor-dot {
+  width: 10px;
+  height: 10px;
+  background: #0d0d0d;
+}
+
+#cursor-ring {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid #0d0d0d;
+  color: #000000;
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  transition:
+    width 180ms ease,
+    height 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    transform 80ms linear,
+    scale 180ms ease;
+}
+
+#cursor-dot[data-state="view"],
+#cursor-dot[data-state="play"] {
+  scale: 0;
+}
+
+#cursor-ring[data-state="view"],
+#cursor-ring[data-state="play"] {
+  width: 64px;
+  height: 64px;
+  border-color: #ffd100;
+  background: #ffd100;
+}
+
+#cursor-dot[data-state="hover"] {
+  scale: 2;
+}
+
+#cursor-ring[data-state="hover"] {
+  scale: 0.4;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  color: #0a0a0a;
+  background: #ffd100;
+}
+
+.grain::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  content: "";
+  opacity: 0.42;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 34px 34px, 34px 34px;
+  mask-image: radial-gradient(circle at 50% 35%, black, transparent 74%);
+}
+
+.noise::after {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  content: "";
+  opacity: 0.12;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+}
+
+.electric-underline {
+  stroke-dasharray: 620;
+  stroke-dashoffset: 620;
+}
+
+.spark-field {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.spark-field span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  left: var(--x);
+  top: var(--y);
+  border-radius: 999px;
+  background: #ffd100;
+  box-shadow: 0 0 16px rgba(255, 209, 0, 0.9);
+  opacity: 0;
+  transform: translate3d(0, 0, 0) scale(0);
+}
+
+.group:hover .spark-field span {
+  animation: spark-burst 760ms ease-out forwards;
+  animation-delay: var(--delay);
+}
+
+@keyframes spark-burst {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.2);
+  }
+  16% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--tx), var(--ty), 0) scale(0);
+  }
+}
+
+@keyframes light-flicker {
+  0%, 19%, 23%, 62%, 100% {
+    opacity: 0.82;
+    filter: brightness(1);
+  }
+  20%, 22%, 64% {
+    opacity: 0.22;
+    filter: brightness(0.45);
+  }
+  66% {
+    opacity: 1;
+    filter: brightness(1.35);
+  }
+}
+
+.flicker-light {
+  animation: light-flicker 4.8s infinite steps(1);
+}
+
+.section-shell {
+  position: relative;
+  overflow: hidden;
+  will-change: transform;
+}
+
+.hero-headline {
+  text-wrap: balance;
+}
+
+.hero-word {
+  display: inline-block;
+  transform-origin: 50% 100%;
+  will-change: transform, opacity, filter, text-shadow;
+}
+
+.light-i {
+  position: relative;
+  display: inline-block;
+  width: 0.28em;
+  height: 0.82em;
+  margin: 0 0.015em;
+  vertical-align: -0.02em;
+}
+
+.light-i-stem {
+  position: absolute;
+  left: 50%;
+  bottom: 0.02em;
+  width: 0.11em;
+  height: 0.57em;
+  border-radius: 999px;
+  background: #ffffff;
+  transform: translateX(-50%);
+}
+
+.light-bulb {
+  position: absolute;
+  top: 0.03em;
+  left: 50%;
+  width: 0.18em;
+  height: 0.18em;
+  border-radius: 999px;
+  background: #ffd100;
+  box-shadow:
+    0 0 0.12em rgba(255, 209, 0, 0.95),
+    0 0 0.34em rgba(255, 209, 0, 0.62),
+    0 0 0.72em rgba(255, 209, 0, 0.32);
+  transform: translateX(-50%);
+  transform-origin: center;
+  animation: bulb-blink 2.7s infinite;
+}
+
+@keyframes bulb-blink {
+  0%, 9%, 15%, 100% {
+    opacity: 1;
+    filter: brightness(1.25);
+  }
+  11%, 13% {
+    opacity: 0.28;
+    filter: brightness(0.55);
+  }
+  48% {
+    opacity: 0.82;
+    filter: brightness(0.9);
+  }
+  52% {
+    opacity: 1;
+    filter: brightness(1.65);
+  }
+}
+
+@media (pointer: coarse) {
+  .custom-cursor,
+  #cursor-dot,
+  #cursor-ring {
+    display: none;
+  }
+
+  .works-page {
+    cursor: auto;
+  }
+
+  .works-page [data-cursor],
+  .project-card {
+    cursor: auto;
+  }
+}
+
+@media (max-width: 767px) {
+  .works-marquee-track {
+    animation-duration: 35s;
+  }
+}
