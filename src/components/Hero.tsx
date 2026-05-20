@@ -4,6 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { ElectricArcs } from "../three/ElectricArcs";
 import { LogoMark } from "../utils/brand";
+import { Link } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -135,12 +136,12 @@ export function Hero() {
           >
             Get a Quote
           </a>
-          <a
-            href="/works"
+          <Link
+            to="/works"
             className="rounded-full border border-white/20 px-8 py-4 font-bold text-white transition hover:border-foleman-yellow hover:text-foleman-yellow"
           >
             Our Work
-          </a>
+          </Link>
         </div>
       </div>
     </section>
