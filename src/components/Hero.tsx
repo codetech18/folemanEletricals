@@ -3,7 +3,6 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { ElectricArcs } from "../three/ElectricArcs";
-import { LogoMark } from "../utils/brand";
 import { Link } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -41,19 +40,8 @@ export function Hero() {
         textShadow: "0 0 0 rgba(255,209,0,0)",
       });
       gsap.set(".light-bulb", { scale: 0.35, opacity: 0 });
-      gsap.set(".logo-draw path, .logo-draw circle", {
-        strokeDasharray: 380,
-        strokeDashoffset: 380,
-      });
-
-      const intro = gsap.timeline({ delay: 1.22 });
+      const intro = gsap.timeline({ delay: 0.25 });
       intro
-        .to(".logo-draw path, .logo-draw circle", {
-          strokeDashoffset: 0,
-          duration: 1.2,
-          stagger: 0.08,
-          ease: "power3.out",
-        })
         .to(
           ".hero-word",
           {
@@ -65,7 +53,6 @@ export function Hero() {
             stagger: 0.09,
             ease: "expo.out",
           },
-          "-=0.54",
         )
         .to(
           ".light-bulb",
@@ -113,7 +100,6 @@ export function Hero() {
         <ElectricArcs />
       </div>
       <div className="hero-inner relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col items-center justify-center px-5 pt-24 text-center">
-        <LogoMark className="logo-draw mb-8 h-24 w-24 text-foleman-yellow drop-shadow-[0_0_34px_rgba(255,209,0,0.4)] md:h-28 md:w-28" />
         <div className="relative">
           <h1
             className="hero-headline max-w-6xl overflow-hidden font-hero text-white"
