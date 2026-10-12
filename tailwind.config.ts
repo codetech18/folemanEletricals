@@ -14,10 +14,10 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"Bebas Neue"', 'Impact', 'sans-serif'],
-        hero: ['"Sora"', 'system-ui', 'sans-serif'],
-        body: ['"DM Sans"', 'system-ui', 'sans-serif'],
-        mono: ['"DM Mono"', 'monospace'],
+        display: ['"Manrope"', 'system-ui', 'sans-serif'],
+        hero: ['"Manrope"', 'system-ui', 'sans-serif'],
+        body: ['"Manrope"', 'system-ui', 'sans-serif'],
+        mono: ['"Manrope"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         glow: '0 0 48px rgba(255, 209, 0, 0.28)',

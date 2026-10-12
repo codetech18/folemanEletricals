@@ -18,6 +18,7 @@ export function ProblemSection() {
 
   useGSAP(
     () => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       gsap.from('.problem-line', {
         y: 50,
         opacity: 0,
@@ -59,7 +60,7 @@ export function ProblemSection() {
       <div className="relative z-10 mx-auto flex min-h-[68vh] max-w-6xl items-center">
         <div className="max-w-4xl">
           <p className="mb-8 text-sm font-bold uppercase tracking-[0.34em] text-foleman-yellow">The Problem</p>
-          <div className="space-y-4 font-display text-5xl leading-[0.92] text-white sm:text-6xl md:text-8xl">
+          <div className="problem-copy space-y-4 font-display text-white">
             {lines.map((line) => (
               <p key={line} className="problem-line">
                 {line}

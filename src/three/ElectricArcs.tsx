@@ -1,104 +1,182 @@
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Bloom, EffectComposer } from '@react-three/postprocessing';
-import { useMemo, useRef } from 'react';
-import * as THREE from 'three';
+import { useEffect, useRef } from "react";
 
-type Arc = {
-  points: THREE.Vector3[];
-  delay: number;
-  life: number;
-  offset: number;
-};
+type Point = { x: number; y: number };
+type Arc = { points: Point[]; branches: Point[][]; offset: number; cycle: number };
 
-function createArc(seed: number): Arc {
-  const points: THREE.Vector3[] = [];
-  const lane = seed % 7;
-  const startX = -10.5 - (seed % 4) * 0.55;
-  const startY = -2.7 + lane * 0.88 + Math.sin(seed * 0.73) * 0.18;
-  const length = 19 + (seed % 5) * 0.62;
-  const segments = 18 + (seed % 7);
-
-  for (let i = 0; i < segments; i += 1) {
-    const progress = i / (segments - 1);
-    const jitter = Math.sin(seed * 12.989 + i * 4.13) * 0.28;
-    const kink = Math.sin(progress * Math.PI * (2.4 + (seed % 3)) + seed) * 0.42;
-    points.push(
-      new THREE.Vector3(
-        startX + progress * length + jitter,
-        startY + kink + Math.sin(seed + i * 1.7) * 0.06,
-        -2.1 - (seed % 4) * 0.42,
-      ),
-    );
-  }
-
-  return {
-    points,
-    delay: (seed % 8) * 0.18,
-    life: 1.2 + (seed % 5) * 0.18,
-    offset: seed * 0.31,
+function seededRandom(seed: number) {
+  return () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
   };
 }
 
-function ArcLines() {
-  const segments = useMemo(() => {
-    const arcs = Array.from({ length: 24 }, (_, index) => createArc(index + 3));
-
-    return arcs.map((arc, index) => {
-      const geometry = new THREE.BufferGeometry().setFromPoints(arc.points);
-      const material = new THREE.LineBasicMaterial({ color: '#FFD100', transparent: true, opacity: 0 });
-      const line = new THREE.Line(geometry, material);
-
-      const branchStart = arc.points[Math.min(arc.points.length - 2, 3 + (index % 5))];
-      const branchGeometry = new THREE.BufferGeometry().setFromPoints([
-        branchStart,
-        new THREE.Vector3(branchStart.x + 0.48, branchStart.y + 0.38, branchStart.z),
-        new THREE.Vector3(branchStart.x + 1.12, branchStart.y + 0.08, branchStart.z),
-      ]);
-      const branchMaterial = new THREE.LineBasicMaterial({ color: '#fff4a8', transparent: true, opacity: 0 });
-      const branch = new THREE.Line(branchGeometry, branchMaterial);
-
-      return { arc, line, branch };
-    });
-  }, []);
-
-  useFrame(({ clock }) => {
-    const elapsed = clock.elapsedTime;
-    segments.forEach(({ arc, line, branch }, index) => {
-      const pulse = ((elapsed + arc.delay) % arc.life) / arc.life;
-      const intensity = Math.sin(pulse * Math.PI);
-      line.material.opacity = Math.max(0, intensity * 0.72 - 0.05);
-      line.scale.setScalar(0.98 + intensity * 0.025);
-      line.position.x = Math.sin(elapsed * 0.2 + arc.offset) * 0.42;
-      const branchPulse = ((elapsed + index * 0.23) % 1.8) / 1.8;
-      branch.material.opacity = Math.sin(branchPulse * Math.PI) * 0.26;
-    });
-  });
-
-  return (
-    <group rotation={[0, 0, -0.045]}>
-      {segments.map(({ arc, line, branch }) => (
-        <group key={arc.offset}>
-          <primitive object={line} />
-          <primitive object={branch} />
-        </group>
-      ))}
-    </group>
-  );
+function lightningPath(
+  start: Point,
+  end: Point,
+  random: () => number,
+  displacement: number,
+  depth = 6,
+): Point[] {
+  if (!depth) return [start, end];
+  const middle = {
+    x: (start.x + end.x) / 2,
+    y: (start.y + end.y) / 2 + (random() - 0.5) * displacement,
+  };
+  return [
+    ...lightningPath(start, middle, random, displacement * 0.68, depth - 1).slice(
+      0,
+      -1,
+    ),
+    ...lightningPath(middle, end, random, displacement * 0.68, depth - 1),
+  ];
 }
 
-export function ElectricArcs() {
-  return (
-    <Canvas
-      dpr={[1, 1.35]}
-      camera={{ position: [0, 0, 8], fov: 58 }}
-      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-    >
-      <color attach="background" args={['#0a0a0a']} />
-      <fog attach="fog" args={['#0a0a0a', 7, 15]} />
-      <ArcLines />
-      <EffectComposer multisampling={0}>
-        <Bloom intensity={1.15} luminanceThreshold={0.1} luminanceSmoothing={0.42} mipmapBlur />
-      </EffectComposer>
-    </Canvas>
+function createArc(index: number, cycle: number): Arc {
+  const random = seededRandom(1703 + index * 9871 + cycle * 7919);
+  const lanes = [0.24, 0.73, 0.37, 0.85, 0.15, 0.61];
+  const y = lanes[index] + (random() - 0.5) * 0.09;
+  const points = lightningPath(
+    { x: -0.08, y },
+    { x: 1.08, y: y + (random() - 0.5) * 0.19 },
+    random,
+    0.3,
   );
+  const branches = [0.3, 0.6].map((position, branch) => {
+    const join = Math.round((points.length - 1) * position);
+    const start = points[join];
+    return lightningPath(
+      start,
+      {
+        x: start.x + 0.12 + random() * 0.08,
+        y: start.y + (branch % 2 ? -1 : 1) * (0.07 + random() * 0.07),
+      },
+      random,
+      0.09,
+      3,
+    );
+  });
+  return { points, branches, offset: index * 0.83, cycle };
+}
+
+/** Lightweight decorative canvas: no GPU context or post-processing required. */
+export function ElectricArcs() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+    if (!canvas || !context) return;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const started = performance.now();
+    let width = 0;
+    let height = 0;
+    let frame = 0;
+    let visible = true;
+    let arcs = Array.from({ length: 6 }, (_, index) => createArc(index, 0));
+
+    function stroke(
+      points: Point[],
+      alpha: number,
+      lineWidth: number,
+      glow: number,
+      color: string,
+    ) {
+      if (points.length < 2) return;
+      context!.beginPath();
+      points.forEach((point, index) => {
+        const x = point.x * width;
+        const y = point.y * height;
+        if (index === 0) context!.moveTo(x, y);
+        else context!.lineTo(x, y);
+      });
+      context!.globalAlpha = alpha;
+      context!.strokeStyle = color;
+      context!.lineWidth = lineWidth;
+      context!.shadowBlur = glow;
+      context!.shadowColor = "#ffd100";
+      context!.lineJoin = "round";
+      context!.lineCap = "round";
+      context!.stroke();
+    }
+
+    function draw(now: number, still = false) {
+      context!.clearRect(0, 0, width, height);
+      const seconds = still ? 2.6 : (now - started) / 1000;
+      const duration = 6.8;
+      arcs.forEach((arc, index) => {
+        const time = seconds + arc.offset;
+        const cycle = Math.floor(time / duration);
+        if (!still && cycle !== arc.cycle) {
+          arc = arcs[index] = createArc(index, cycle);
+        }
+        const phase = (time % duration) / duration;
+        // Broad, gradual envelopes keep the effect from becoming a strobe.
+        const envelope = phase < 0.7 ? Math.sin((phase / 0.7) * Math.PI) : 0;
+        if (envelope <= 0) return;
+        const head = Math.min(1, phase / 0.58);
+        const first = Math.max(
+          0,
+          Math.floor((head - 0.3) * (arc.points.length - 1)),
+        );
+        const last = Math.min(
+          arc.points.length,
+          Math.ceil(head * (arc.points.length - 1)) + 1,
+        );
+        const trail = arc.points.slice(first, last);
+        stroke(arc.points, envelope * 0.12, 1, 5, "#d5a821");
+        stroke(trail, envelope * 0.48, 2.2, 18, "#ffd100");
+        stroke(trail, envelope * 0.66, 0.7, 4, "#fff5cc");
+        arc.branches.forEach((branch, branchIndex) => {
+          const arrival = branchIndex ? 0.6 : 0.3;
+          const branchLight = Math.max(0, 1 - Math.abs(head - arrival) / 0.26);
+          stroke(branch, envelope * branchLight * 0.34, 0.8, 9, "#ffe890");
+        });
+      });
+      context!.globalAlpha = 1;
+      context!.shadowBlur = 0;
+    }
+
+    function animate(now: number) {
+      frame = 0;
+      draw(now);
+      if (visible && !document.hidden && !motion.matches) {
+        frame = requestAnimationFrame(animate);
+      }
+    }
+    function update() {
+      cancelAnimationFrame(frame);
+      frame = 0;
+      if (motion.matches) draw(performance.now(), true);
+      else if (visible && !document.hidden) frame = requestAnimationFrame(animate);
+    }
+    function resize() {
+      const bounds = canvas!.getBoundingClientRect();
+      width = bounds.width;
+      height = bounds.height;
+      const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvas!.width = Math.round(width * ratio);
+      canvas!.height = Math.round(height * ratio);
+      context!.setTransform(ratio, 0, 0, ratio, 0, 0);
+      update();
+    }
+    const sizeObserver = new ResizeObserver(resize);
+    const visibilityObserver = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      update();
+    });
+    sizeObserver.observe(canvas);
+    visibilityObserver.observe(canvas);
+    motion.addEventListener("change", update);
+    document.addEventListener("visibilitychange", update);
+    resize();
+    return () => {
+      cancelAnimationFrame(frame);
+      sizeObserver.disconnect();
+      visibilityObserver.disconnect();
+      motion.removeEventListener("change", update);
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="electric-canvas" aria-hidden="true" />;
 }

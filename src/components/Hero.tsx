@@ -33,6 +33,7 @@ export function Hero() {
 
   useGSAP(
     () => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       gsap.set(".hero-word", {
         yPercent: 80,
         opacity: 0,
@@ -108,25 +109,29 @@ export function Hero() {
       ref={scope}
       className="section-shell grain noise min-h-screen bg-foleman-black"
     >
-      <div className="absolute inset-0 z-0">
+      <div className="electric-field absolute inset-0 z-0">
         <ElectricArcs />
       </div>
       <div className="hero-inner relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col items-center justify-center px-5 pt-24 text-center">
         <LogoMark className="logo-draw mb-8 h-24 w-24 text-foleman-yellow drop-shadow-[0_0_34px_rgba(255,209,0,0.4)] md:h-28 md:w-28" />
         <div className="relative">
           <h1
-            className="hero-headline max-w-6xl overflow-hidden font-hero text-[3.35rem] font-extrabold leading-[0.92] tracking-normal text-white sm:text-[5.2rem] md:text-[8rem]"
+            className="hero-headline max-w-6xl overflow-hidden font-hero text-white"
             aria-label={headline}
           >
-            {words.map((word) => (
-              <span key={word} className="hero-word mr-3 md:mr-5">
-                <HeroWord word={word} />
+            {[words.slice(0, 3), words.slice(3)].map((line, index) => (
+              <span key={index} className="hero-line">
+                {line.map((word) => (
+                  <span key={word} className="hero-word">
+                    <HeroWord word={word} />
+                  </span>
+                ))}
               </span>
             ))}
           </h1>
         </div>
         <p className="hero-copy mt-7 max-w-2xl text-base leading-8 text-white/72 md:text-xl">
-          Lagos&apos; most trusted electrical engineers. Residential.
+          Electrical installation, maintenance and repairs in Lagos. Residential.
           Commercial. Industrial.
         </p>
         <div className="hero-actions mt-10 flex flex-col items-center gap-4 sm:flex-row">

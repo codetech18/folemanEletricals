@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { contact, LogoMark } from "../utils/brand";
 
 const links = [
   { href: "/#services", label: "Services" },
   { href: "/works", label: "Our Work" },
+  { href: "/about", label: "About us" },
   { href: "/#process", label: "Process" },
   { href: "/#contact", label: "Contact" },
 ];
@@ -17,18 +18,6 @@ interface NavLinkProps {
 }
 
 function NavLink({ href, label, className, onClick }: NavLinkProps) {
-  if (href.includes("#")) {
-    return (
-      <a
-        href={href}
-        className={className}
-        data-cursor="hover"
-        onClick={onClick}
-      >
-        {label}
-      </a>
-    );
-  }
   return (
     <Link to={href} className={className} data-cursor="hover" onClick={onClick}>
       {label}
@@ -38,6 +27,13 @@ function NavLink({ href, label, className, onClick }: NavLinkProps) {
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  useEffect(() => setIsOpen(false), [location]);
+  useEffect(() => {
+    const escape = (e: KeyboardEvent) => { if(e.key === "Escape") setIsOpen(false); };
+    window.addEventListener("keydown", escape);
+    return () => window.removeEventListener("keydown", escape);
+  }, []);
 
   function closeMenu() {
     setIsOpen(false);
@@ -51,22 +47,20 @@ export function Navbar() {
 
   return (
     <header className="fixed left-0 right-0 top-0 z-50 px-4 py-4 sm:px-6">
-      <nav className="relative mx-auto max-w-7xl rounded-[1.75rem] border border-white/10 bg-black/35 px-4 py-3 text-sm text-white/80 shadow-inner-line backdrop-blur-xl md:rounded-full">
+      <nav aria-label="Main navigation" className="relative mx-auto max-w-7xl rounded-[1.75rem] border border-white/10 bg-black/35 px-4 py-3 text-sm text-white/80 shadow-inner-line backdrop-blur-xl md:rounded-full">
         <div className="flex items-center justify-between">
           <Link
             to="/"
-            className="flex items-center gap-3 text-white"
+            className="brand-lockup"
             aria-label="Foleman Electricals home"
             data-cursor="hover"
             onClick={closeMenu}
           >
-            <LogoMark className="h-9 w-9 text-foleman-yellow" />
-            <span className="font-display text-2xl tracking-normal">
-              Foleman
-            </span>
+            <LogoMark />
+            <span>FOLEMAN<small>ELECTRICALS</small></span>
           </Link>
 
-          <div className="hidden items-center gap-8 md:flex">
+          <div className="hidden items-center gap-4 md:flex lg:gap-8">
             {links.map(function (link) {
               return (
                 <NavLink
@@ -80,9 +74,7 @@ export function Navbar() {
           </div>
 
           <a
-            href={contact.whatsapp}
-            target="_blank"
-            rel="noreferrer"
+            href={`tel:${contact.phone}`}
             data-cursor="hover"
             className="hidden rounded-full bg-foleman-yellow px-4 py-2 font-bold text-black transition hover:shadow-glow md:inline-flex"
           >
@@ -93,6 +85,7 @@ export function Navbar() {
             type="button"
             onClick={toggleMenu}
             aria-expanded={isOpen}
+            aria-controls="mobile-menu"
             aria-label={
               isOpen ? "Close navigation menu" : "Open navigation menu"
             }
@@ -122,6 +115,9 @@ export function Navbar() {
         </div>
 
         <div
+          id="mobile-menu"
+          hidden={!isOpen}
+          style={{ display: isOpen ? undefined : "none" }}
           className={[
             "grid overflow-hidden transition-[grid-template-rows,opacity] duration-300 md:hidden",
             isOpen

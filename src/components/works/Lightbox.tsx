@@ -1,54 +1,96 @@
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import gsap from 'gsap';
-
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 type LightboxProps = {
   src: string;
   poster?: string;
   onClose: () => void;
+  type?: "image" | "video";
+  title?: string;
 };
-
-export function Lightbox({ src, poster, onClose }: LightboxProps) {
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [closing, setClosing] = useState(false);
-
+export function Lightbox({
+  src,
+  poster,
+  onClose,
+  type = "video",
+  title = "Project video",
+}: LightboxProps) {
+  const dialog = useRef<HTMLDivElement>(null);
+  const close = useRef<HTMLButtonElement>(null);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
-    gsap.fromTo(overlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.3 });
-    gsap.fromTo(containerRef.current, { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: 'back.out(1.4)' });
-
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setClosing(true);
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    close.current?.focus();
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "Tab") {
+        const nodes = dialog.current?.querySelectorAll<HTMLElement>(
+          'button, a[href], video[controls], [tabindex="0"]',
+        );
+        if (!nodes?.length) return;
+        const first = nodes[0],
+          last = nodes[nodes.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     };
-    window.addEventListener('keydown', escape);
-    return () => window.removeEventListener('keydown', escape);
-  }, []);
-
-  useEffect(() => {
-    if (!closing) return;
-    const timeline = gsap.timeline({ onComplete: onClose });
-    timeline.to(containerRef.current, { scale: 0.9, opacity: 0, duration: 0.2, ease: 'power2.in' }).to(overlayRef.current, { opacity: 0, duration: 0.2 }, '-=0.08');
-  }, [closing, onClose]);
-
+    document.addEventListener("keydown", key);
+    return () => {
+      document.body.style.overflow = overflow;
+      document.removeEventListener("keydown", key);
+      previous?.focus();
+    };
+  }, [onClose]);
   return createPortal(
     <div
-      ref={overlayRef}
-      className="fixed inset-0 z-[9999] grid place-items-center bg-black/[0.96] p-4 md:cursor-none"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) setClosing(true);
+      className="media-overlay"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
       }}
     >
-      <button
-        type="button"
-        data-cursor="hover"
-        onClick={() => setClosing(true)}
-        className="fixed right-5 top-5 font-mono text-2xl text-white/70 transition hover:text-white md:right-8 md:top-6"
-        aria-label="Close video"
+      <div
+        ref={dialog}
+        className="media-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="media-title"
       >
-        ×
-      </button>
-      <div ref={containerRef} className="aspect-video w-full max-w-[900px] overflow-hidden bg-[#111]">
-        <video className="h-full w-full" controls autoPlay preload="metadata" src={src} poster={poster} />
+        <div className="media-dialog-bar">
+          <h2 id="media-title">{title}</h2>
+          <button
+            ref={close}
+            onClick={onClose}
+            type="button"
+            aria-label="Close project"
+          >
+            Close ×
+          </button>
+        </div>
+        {failed ? (
+          <p role="status">
+            This media couldn’t be loaded. Please contact us to see more of our
+            work.
+          </p>
+        ) : type === "image" ? (
+          <img src={src} alt={title} onError={() => setFailed(true)} />
+        ) : (
+          <video
+            controls
+            autoPlay
+            playsInline
+            preload="metadata"
+            src={src}
+            poster={poster}
+            onError={() => setFailed(true)}
+            tabIndex={0}
+          />
+        )}
       </div>
     </div>,
     document.body,
